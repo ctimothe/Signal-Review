@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+.DS_Store
+.env
+.env.*
+*.log
+dist/
+build/
+.cursor/
+.agentic_bootstrapped
+tmp/
