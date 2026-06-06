@@ -1,0 +1,28 @@
+{
+  "name": "signal-review",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Local-first, OpenAI-compatible code review tooling with a /review skill and CLI.",
+  "bin": {
+    "review": "./scripts/review.js"
+  },
+  "scripts": {
+    "review": "node scripts/review.js",
+    "lint": "eslint \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\"",
+    "test": "NODE_ENV=test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit --runInBand",
+    "verify": "npm run lint && npm run test",
+    "format": "prettier --write \"**/*.{js,md,json,yml,yaml}\"",
+    "prepare": "husky || true"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5"
+  }
+}
