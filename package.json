@@ -10,6 +10,7 @@
   "scripts": {
     "review": "node scripts/review.js",
     "package:macos": "node scripts/build-macos-app.js",
+    "package:linux": "node scripts/build-linux-app.js",
     "lint": "eslint \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\"",
     "test": "NODE_ENV=test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit --runInBand",
     "verify": "npm run lint && npm run test",

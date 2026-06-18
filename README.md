@@ -49,6 +49,23 @@ saved settings.
 
 Note: the current launcher expects Node.js 22+ to be installed on the Mac.
 
+## Linux App
+
+The repo also includes a native Linux app directory that wraps the same CLI and
+stores setup in `~/.config/signal-review/config.json`.
+
+Build it with:
+
+```bash
+npm run package:linux
+```
+
+That command stages `dist/linux/Signal Review.AppDir` and, when `appimagetool`
+is available, creates a Linux AppImage alongside it.
+
+The Linux launcher uses Zenity for GUI setup and report display when available,
+and falls back to terminal prompts if it is not.
+
 ## Output
 
 - Human-readable summary by default
