@@ -59,6 +59,7 @@ describe('runLocalReviewCli', () => {
       collectContext,
       createBackend,
       runReview,
+      readConfig: jest.fn().mockReturnValue({}),
     });
 
     expect(exitCode).toBe(2);
@@ -116,6 +117,7 @@ describe('runLocalReviewCli', () => {
       collectContext,
       createBackend,
       runReview,
+      readConfig: jest.fn().mockReturnValue({}),
     });
 
     expect(exitCode).toBe(0);
@@ -192,6 +194,7 @@ describe('runLocalReviewCli', () => {
       collectContext: jest.fn().mockRejectedValue(new Error('git is unavailable')),
       createBackend: jest.fn(),
       runReview: jest.fn(),
+      readConfig: jest.fn().mockReturnValue({}),
     });
 
     expect(exitCode).toBe(1);
