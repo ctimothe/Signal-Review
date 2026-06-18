@@ -129,6 +129,56 @@ describe('runLocalReviewCli', () => {
     });
   });
 
+  it('loads repo and backend defaults from a saved config file', async () => {
+    const stdout = createCapturedWriter();
+    const stderr = createCapturedWriter();
+    const collectContext = jest.fn().mockResolvedValue({
+      diff: '',
+      files: [],
+    });
+    const backend = { complete: jest.fn() };
+    const createBackend = jest.fn().mockReturnValue(backend);
+    const runReview = jest.fn().mockResolvedValue({
+      version: 1,
+      score: 5,
+      summary: 'Nothing material to flag.',
+      findings: [],
+      backend: {
+        model: 'qwen2.5:14b',
+      },
+    });
+    const readConfig = jest.fn().mockReturnValue({
+      repoRoot: '/workspace/repo-from-config',
+      baseUrl: 'http://127.0.0.1:11434',
+      model: 'qwen2.5:14b',
+      timeoutMs: 90000,
+    });
+
+    const exitCode = await runLocalReviewCli({
+      argv: ['--config', '/Users/test/Library/Application Support/Signal Review/config.json'],
+      cwd: '/workspace/ignored',
+      env: {},
+      stdout,
+      stderr,
+      collectContext,
+      createBackend,
+      runReview,
+      readConfig,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(readConfig).toHaveBeenCalledWith('/Users/test/Library/Application Support/Signal Review/config.json');
+    expect(collectContext).toHaveBeenCalledWith({ repoRoot: '/workspace/repo-from-config' });
+    expect(createBackend).toHaveBeenCalledWith({
+      apiKey: undefined,
+      baseUrl: 'http://127.0.0.1:11434',
+      model: 'qwen2.5:14b',
+      timeoutMs: 90000,
+    });
+    expect(stderr.toString()).toBe('');
+    expect(stdout.toString()).toContain('Score: 5/5');
+  });
+
   it('returns a runtime failure code when review collection fails', async () => {
     const stdout = createCapturedWriter();
     const stderr = createCapturedWriter();
