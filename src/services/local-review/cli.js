@@ -1,6 +1,15 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
 import { createOpenAICompatibleBackend } from './backendAdapter.js';
 import { collectReviewContext } from './contextCollector.js';
 import { runReview } from './reviewEngine.js';
+
+export const DEFAULT_REVIEW_CONFIG_PATH =
+  process.platform === 'darwin'
+    ? join(homedir(), 'Library', 'Application Support', 'Signal Review', 'config.json')
+    : join(homedir(), '.config', 'signal-review', 'config.json');
 
 const parseArgs = (argv) => {
   const args = {
@@ -16,6 +25,10 @@ const parseArgs = (argv) => {
         break;
       case '--repo-root':
         args.repoRoot = argv[index + 1];
+        index += 1;
+        break;
+      case '--config':
+        args.config = argv[index + 1];
         index += 1;
         break;
       case '--base-url':
@@ -52,6 +65,7 @@ const buildUsage = () =>
     '',
     'Options:',
     '  --repo-root <path>   Repository root to review (defaults to current working directory)',
+    '  --config <path>      Review config file (defaults to the native app config location)',
     '  --base-url <url>     OpenAI-compatible backend base URL',
     '  --model <name>       Backend model name',
     '  --api-key <value>    Backend API key',
@@ -87,18 +101,72 @@ const formatHumanReport = (report) => {
   return `${lines.join('\n')}\n`;
 };
 
-const resolveConfig = ({ argv, env, cwd }) => {
+export const normalizeReviewConfig = (config) => {
+  if (!config || typeof config !== 'object') {
+    return {};
+  }
+
+  const backend = typeof config.backend === 'object' && config.backend ? config.backend : {};
+
+  return {
+    repoRoot: typeof config.repoRoot === 'string' ? config.repoRoot : undefined,
+    baseUrl:
+      typeof config.baseUrl === 'string'
+        ? config.baseUrl
+        : typeof backend.baseUrl === 'string'
+          ? backend.baseUrl
+          : undefined,
+    model:
+      typeof config.model === 'string'
+        ? config.model
+        : typeof backend.model === 'string'
+          ? backend.model
+          : undefined,
+    apiKey:
+      typeof config.apiKey === 'string'
+        ? config.apiKey
+        : typeof backend.apiKey === 'string'
+          ? backend.apiKey
+          : undefined,
+    timeoutMs:
+      Number.isFinite(config.timeoutMs)
+        ? config.timeoutMs
+        : Number.isFinite(backend.timeoutMs)
+          ? backend.timeoutMs
+          : undefined,
+  };
+};
+
+export const readReviewConfig = (configPath = DEFAULT_REVIEW_CONFIG_PATH) => {
+  if (!configPath || !existsSync(configPath)) {
+    return {};
+  }
+
+  try {
+    const parsedConfig = JSON.parse(readFileSync(configPath, 'utf8'));
+    return normalizeReviewConfig(parsedConfig);
+  } catch (error) {
+    throw new Error(`Unable to read review config at ${configPath}: ${error.message}`);
+  }
+};
+
+const resolveConfig = ({ argv, env, cwd, readConfig = readReviewConfig }) => {
   const flags = parseArgs(argv);
+  const configPath = flags.config || env.REVIEW_CONFIG_PATH || DEFAULT_REVIEW_CONFIG_PATH;
+  const config = readConfig(configPath);
 
   return {
     flags,
-    repoRoot: flags.repoRoot || cwd,
+    configPath,
+    repoRoot: flags.repoRoot || config.repoRoot || cwd,
     backendConfig: {
-      baseUrl: flags.baseUrl || env.REVIEW_BACKEND_BASE_URL || env.OLLAMA_HOST,
-      apiKey: flags.apiKey || env.REVIEW_BACKEND_API_KEY,
-      model: flags.model || env.REVIEW_MODEL || env.OLLAMA_MODEL,
+      baseUrl: flags.baseUrl || config.baseUrl || env.REVIEW_BACKEND_BASE_URL || env.OLLAMA_HOST,
+      apiKey: flags.apiKey || config.apiKey || env.REVIEW_BACKEND_API_KEY,
+      model: flags.model || config.model || env.REVIEW_MODEL || env.OLLAMA_MODEL,
       timeoutMs: flags.timeoutMs
         ? Number(flags.timeoutMs)
+        : config.timeoutMs
+          ? Number(config.timeoutMs)
         : env.REVIEW_BACKEND_TIMEOUT_MS
           ? Number(env.REVIEW_BACKEND_TIMEOUT_MS)
           : 120000,
@@ -115,8 +183,9 @@ export const runLocalReviewCli = async ({
   collectContext = collectReviewContext,
   createBackend = createOpenAICompatibleBackend,
   runReview: runReviewFn = runReview,
+  readConfig = readReviewConfig,
 } = {}) => {
-  const { flags, repoRoot, backendConfig } = resolveConfig({ argv, env, cwd });
+  const { flags, repoRoot, backendConfig } = resolveConfig({ argv, env, cwd, readConfig });
 
   if (flags.help) {
     stdout.write(`${buildUsage()}\n`);
