@@ -17,6 +17,8 @@ Keep this file current. It is the compact source of truth for the agent.
 
 - Install: `npm install`
 - Review: `npm run review`
+- macOS app package: `npm run package:macos`
+- Linux app package: `npm run package:linux`
 - Lint: `npm run lint`
 - Test: `npm run test`
 - Verify: `npm run verify`
@@ -24,6 +26,8 @@ Keep this file current. It is the compact source of truth for the agent.
 ## Package scripts
 
 - `review` - launch the local review CLI
+- `package:macos` - stage the macOS app bundle and DMG
+- `package:linux` - stage the Linux app directory and optional AppImage
 - `lint` - run ESLint across source, tests, and scripts
 - `test` - run the Jest suite
 - `verify` - run lint and tests

@@ -29,6 +29,43 @@ For a direct executable:
 node scripts/review.js --base-url http://127.0.0.1:11434 --model qwen2.5:14b
 ```
 
+## macOS App
+
+The repo includes a macOS launcher app that wraps the CLI and stores setup in
+`~/Library/Application Support/Signal Review/config.json`.
+
+Build it with:
+
+```bash
+npm run package:macos
+```
+
+That command stages `dist/macos/Signal Review.app`. When run on macOS, it also
+creates a DMG in `dist/`.
+
+The first launch prompts for the repository to review, the backend URL, and the
+model name. The launcher then opens Terminal and runs the review CLI with those
+saved settings.
+
+Note: the current launcher expects Node.js 22+ to be installed on the Mac.
+
+## Linux App
+
+The repo also includes a native Linux app directory that wraps the same CLI and
+stores setup in `~/.config/signal-review/config.json`.
+
+Build it with:
+
+```bash
+npm run package:linux
+```
+
+That command stages `dist/linux/Signal Review.AppDir` and, when `appimagetool`
+is available, creates a Linux AppImage alongside it.
+
+The Linux launcher uses Zenity for GUI setup and report display when available,
+and falls back to terminal prompts if it is not.
+
 ## Output
 
 - Human-readable summary by default
